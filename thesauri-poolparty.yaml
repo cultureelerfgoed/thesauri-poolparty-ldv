@@ -1,12 +1,12 @@
 triplydb:
   cli_path: "C:\\Users\\linkeddata\\Downloads\\triplydb.exe"  # Pad naar TriplyDB CLI
   account: "rce"  # Accountnaam voor TriplyDB
-  token: "${TRIPLYDB_TOKEN}"  # Verwijst naar GitHub Secret
+  token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhdWQiOiJ1bmtub3duIiwiaXNzIjoiaHR0cHM6Ly9hcGkubGlua2VkZGF0YS5jdWx0dXJlZWxlcmZnb2VkLm5sIiwianRpIjoiMTZhMmMwMzAtYzk3Ni00ZWFjLTgxNDgtNDY3YmI3ZTYxYTMwIiwidWlkIjoiNjI4MjI5MWUxOTIyYTEyZTlhNzE2MDliIiwiaWF0IjoxNzM3MTE5OTc2fQ.kbzgP9RKQSDax01bmVZQNlB9iwWkxFLHHbBymYUjWXs" # Verwijst naar GitHub Secret
 
 poolparty:
   export_url_template: "https://data.cultureelerfgoed.nl/PoolParty/api/projects/{}/export"
   auth_headers:
-    Authorization: "${POOLPARTY_AUTH}"  # Verwijst naar GitHub Secret
+    Authorization: "Basic YXBpdXNlcl9yZWZlcmVudGllbmV0d2VyazotbmsrMWdJNkQiRWJNYih3MHhBZUFrcykwYmEmM0E3OEpZMzlMZSMj"  # Verwijst naar GitHub Secret
     Content-Type: "application/json"
 
 datasets:
