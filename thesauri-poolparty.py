@@ -29,11 +29,6 @@ def close_logging():
         handler.close()
         logging.root.removeHandler(handler)
 
-# DEBUG: Test of de secrets worden doorgegeven
-
-print(f"POOLPARTY_AUTH: {os.getenv('POOLPARTY_AUTH')}")
-print(f"TRIPLYDB_TOKEN: {os.getenv('TRIPLYDB_TOKEN')}")
-
 # Exporteer RDF-data vanuit PoolParty
 def export_rdf_data(project_code, export_url_template, headers, output_file):
     """
