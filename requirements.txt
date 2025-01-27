@@ -1,0 +1,2 @@
+requests==2.31.0  # Voor HTTP-aanroepen naar PoolParty en TriplyDB API
+PyYAML==6.0       # Voor het verwerken van YAML-configuratiebestanden
