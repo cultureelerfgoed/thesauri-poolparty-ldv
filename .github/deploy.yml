@@ -7,39 +7,32 @@ on:
 
 jobs:
   deploy:
-    runs-on: ${{ matrix.os }}  # Matrix bepaalt het platform
-
-    strategy:
-      matrix:
-        os: [windows-latest, ubuntu-latest, macos-latest]  # Draai op alle platforms
+    runs-on: windows-latest  # Gebruik alleen Windows
 
     steps:
+    # 1. Haal de code op uit de repository
     - name: Checkout repository
       uses: actions/checkout@v3
 
+    # 2. Installeer Python
     - name: Set up Python
       uses: actions/setup-python@v4
       with:
-        python-version: "3.11"
+        python-version: "3.11"  # Gebruik de gewenste Python-versie
 
+    # 3. Installeer vereiste Python-pakketten
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
+    # 4. Download TriplyDB CLI (Windows-versie)
     - name: Download TriplyDB CLI
       run: |
-        if [ "${{ matrix.os }}" == "windows-latest" ]; then
-          Invoke-WebRequest -Uri https://static.triply.cc/cli/triplydb.exe -OutFile triplydb.exe
-        elif [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
-          curl -o triplydb https://static.triply.cc/cli/triplydb-linux
-          chmod +x triplydb
-        elif [ "${{ matrix.os }}" == "macos-latest" ]; then
-          curl -o triplydb https://static.triply.cc/cli/triplydb-macos
-          chmod +x triplydb
-        fi
-        echo $PWD >> $GITHUB_PATH
+        Invoke-WebRequest -Uri https://static.triply.cc/cli/triplydb.exe -OutFile triplydb.exe
+        echo $PWD >> $env:GITHUB_PATH
 
+    # 5. Voer het Python-script uit
     - name: Run export_import script
       env:
         TRIPLYDB_TOKEN: ${{ secrets.TRIPLYDB_TOKEN }}
