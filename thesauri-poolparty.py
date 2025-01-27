@@ -30,6 +30,7 @@ def close_logging():
         logging.root.removeHandler(handler)
 
 # DEBUG: Test of de secrets worden doorgegeven
+
 print(f"POOLPARTY_AUTH: {os.getenv('POOLPARTY_AUTH')}")
 print(f"TRIPLYDB_TOKEN: {os.getenv('TRIPLYDB_TOKEN')}")
 
