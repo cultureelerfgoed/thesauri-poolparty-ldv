@@ -3,6 +3,7 @@ import os
 import subprocess
 import logging
 import yaml
+import os
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
@@ -27,6 +28,10 @@ def close_logging():
     for handler in logging.root.handlers[:]:
         handler.close()
         logging.root.removeHandler(handler)
+
+# DEBUG: Test of de secrets worden doorgegeven
+print(f"POOLPARTY_AUTH: {os.getenv('POOLPARTY_AUTH')}")
+print(f"TRIPLYDB_TOKEN: {os.getenv('TRIPLYDB_TOKEN')}")
 
 # Exporteer RDF-data vanuit PoolParty
 def export_rdf_data(project_code, export_url_template, headers, output_file):
