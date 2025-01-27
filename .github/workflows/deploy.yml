@@ -1,4 +1,4 @@
-name: Deploy Thesauri PoolParty to TriplyDB
+name: Deploy Thesauri PoolParty
 
 on:
   workflow_dispatch:  # Handmatige trigger
@@ -26,16 +26,15 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
 
-    # 4. Download TriplyDB CLI (Windows-versie)
+    # 4. Download de TriplyDB CLI
     - name: Download TriplyDB CLI
       run: |
         Invoke-WebRequest -Uri https://static.triply.cc/cli/triplydb.exe -OutFile triplydb.exe
-        echo $PWD >> $env:GITHUB_PATH
 
-    # 5. Voer het Python-script uit
-    - name: Run export_import script
-      env:
-        TRIPLYDB_TOKEN: ${{ secrets.TRIPLYDB_TOKEN }}
-        POOLPARTY_AUTH: ${{ secrets.POOLPARTY_AUTH }}
+    # 5. Voer het Python-script uit met omgevingsvariabelen
+    - name: Run thesauri-poolparty script
       run: |
         python thesauri-poolparty.py
+      env:
+        POOLPARTY_AUTH: ${{ secrets.POOLPARTY_AUTH }}
+        TRIPLYDB_TOKEN: ${{ secrets.TRIPLYDB_TOKEN }}
