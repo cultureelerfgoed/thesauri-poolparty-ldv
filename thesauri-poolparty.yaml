@@ -1,12 +1,12 @@
 triplydb:
   cli_path: "triplydb.exe"  # Pad naar TriplyDB CLI
-  account: "rce"  # Accountnaam voor TriplyDB
-  token: "${TRIPLYDB_TOKEN}"  # Gebruik GitHub Secret
+  account: "rce"            # Accountnaam voor TriplyDB
+  token: ""                 # Leeg, wordt overschreven door omgevingsvariabele
 
 poolparty:
   export_url_template: "https://data.cultureelerfgoed.nl/PoolParty/api/projects/{}/export"
   auth_headers:
-    Authorization: "${POOLPARTY_AUTH}"  # Gebruik GitHub Secret
+    Authorization: ""       # Leeg, wordt overschreven door omgevingsvariabele
     Content-Type: "application/json"
 
 datasets:
