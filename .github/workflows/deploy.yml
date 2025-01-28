@@ -1,42 +1,43 @@
 name: Deploy Thesauri PoolParty
 
 on:
-  workflow_dispatch: # Handmatige trigger
-  schedule: # Periodieke trigger
-    - cron: "0 3 * * *" # Elke dag om 03:00 UTC
+  workflow_dispatch:
+  schedule:
+    - cron: "0 6 * * *"
 
 jobs:
   deploy:
-    runs-on: windows-latest # Alleen Windows-omgeving, omdat TriplyDB CLI lokaal in Windows wordt gebruikt
+    runs-on: windows-latest
 
     steps:
-      # 1. Haal de code op uit de repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      # 2. Installeer Python
       - name: Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: "3.11" # Versie van Python
+          python-version: "3.11"
 
-      # 3. Installeer vereiste Python-pakketten
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      # 4. Download TriplyDB CLI
       - name: Download TriplyDB CLI
         run: |
           Invoke-WebRequest -Uri https://static.triply.cc/cli/triplydb.exe -OutFile triplydb.exe
 
-      # 5. Voeg TriplyDB CLI toe aan PATH
       - name: Add TriplyDB CLI to PATH
         run: |
           echo "$(pwd)" >> $env:GITHUB_PATH
 
-      # 6. Voer het Python-script uit
+      # Secrets laden in omgevingsvariabelen
+      - name: Set environment variables
+        env:
+          TRIPLYDB_TOKEN: ${{ secrets.TRIPLYDB_TOKEN }}
+          POOLPARTY_AUTH: ${{ secrets.POOLPARTY_AUTH }}
+        run: echo "Environment variables set."
+
       - name: Run thesauri-poolparty.py
         run: |
           python thesauri-poolparty.py

@@ -3,14 +3,21 @@ import os
 import subprocess
 import logging
 import yaml
-import os
 from datetime import datetime
 from concurrent.futures import ThreadPoolExecutor
 
 # Functie om de configuratie uit een YAML-bestand te laden
 def load_config(config_file="thesauri-poolparty.yaml"):
     with open(config_file, "r") as file:
-        return yaml.safe_load(file)
+        config = yaml.safe_load(file)
+
+    # Gebruik omgevingsvariabelen voor gevoelige data
+    config["triplydb"]["token"] = os.getenv("TRIPLYDB_TOKEN", config["triplydb"].get("token"))
+    config["poolparty"]["auth_headers"]["Authorization"] = os.getenv(
+        "POOLPARTY_AUTH", config["poolparty"]["auth_headers"].get("Authorization")
+    )
+
+    return config
 
 # Logging instellen
 def setup_logging(log_file):
@@ -31,9 +38,6 @@ def close_logging():
 
 # Exporteer RDF-data vanuit PoolParty
 def export_rdf_data(project_code, export_url_template, headers, output_file):
-    """
-    Voert een HTTP POST-aanroep uit om RDF-data van PoolParty te exporteren, tenzij het bestand al bestaat.
-    """
     if os.path.exists(output_file):
         logging.info(f"Bestand '{output_file}' bestaat al, overslaan...")
         return None
@@ -68,9 +72,6 @@ def save_to_file(data, file_name):
 
 # Controleer of bestanden moeten worden samengevoegd
 def should_merge(input_files, output_file):
-    """
-    Controleert of het samengevoegde bestand up-to-date is.
-    """
     if not os.path.exists(output_file):
         return True
     output_mtime = os.path.getmtime(output_file)
@@ -120,9 +121,6 @@ def import_with_triplydb(file_path, cli_path, dataset_name, account_name, graph_
 
 # Parallel importeren van graphs
 def import_graph_parallel(graphs, merged_file, cli_path, dataset_name, account_name, token):
-    """
-    Importeert meerdere graphs parallel naar TriplyDB.
-    """
     def import_task(graph_name):
         return import_with_triplydb(
             merged_file, cli_path, dataset_name, account_name, graph_name, token
@@ -181,7 +179,7 @@ def main():
                 data = export_rdf_data(project_code, poolparty_config["export_url_template"], poolparty_config["auth_headers"], file_name)
                 if data and save_to_file(data, file_name):
                     temp_files.append((file_name, project["graph_name"]))
-                elif os.path.exists(file_name):  # Voeg bestaande bestanden toe
+                elif os.path.exists(file_name):
                     temp_files.append((file_name, project["graph_name"]))
 
             # Merge bestanden als nodig
