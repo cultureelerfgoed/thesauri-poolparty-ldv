@@ -14,8 +14,6 @@ datasets:
     projects:
       - project_code: "1DE00318-CB07-0001-FBB4-C620F33C1540"
         graph_name: "https://data.niod.nl/WO2_Thesaurus/thesaurus"
-      - project_code: "1DF16AC7-7868-0001-EBB8-E60098F4D110"
-        graph_name: "https://data.niod.nl/Organizations/thesaurus"
       - project_code: "1E0320A6-62BA-0001-FCF2-1C301C80F490"
         graph_name: "https://data.niod.nl/WO2_biografieen/thesaurus"
 
