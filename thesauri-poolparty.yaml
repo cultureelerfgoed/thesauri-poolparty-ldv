@@ -3,6 +3,9 @@ triplydb:
   account: "thesauri"            # Accountnaam voor TriplyDB
   token: ""                 # Leeg, wordt overschreven door omgevingsvariabele
 
+env:
+  TRIPLYDB_TOKEN: ${{ secrets.TRIPLYDB_TOKEN }}
+
 poolparty:
   export_url_template: "https://data.cultureelerfgoed.nl/PoolParty/api/projects/{}/export"
   auth_headers:
