@@ -97,25 +97,18 @@ def merge_files(input_files, output_file):
 # Importeer een bestand naar TriplyDB via de CLI
 def import_with_triplydb(file_path, cli_path, dataset_name, account_name, graph_name, token):
     logging.info(f"Start met importeren van '{file_path}' naar graph '{graph_name}' in dataset '{dataset_name}'...")
-
-    command = [
-        cli_path,
-        "import-from-file",
-        "--dataset", dataset_name,
-        "--account", account_name,
-        "--token", token,
-        "--default-graph-name", graph_name,
-        "--mode", "overwrite",
-        file_path
-    ]
-
-    logging.info(f"Uitgevoerde TriplyDB opdracht: {' '.join(command)}")  # Log de exacte opdracht
-
     try:
+        command = [
+            cli_path,
+            "import-from-file",
+            "--dataset", dataset_name,
+            "--account", account_name,
+            "--token", token,
+            "--default-graph-name", graph_name,
+            "--mode", "overwrite",  # Correcte optie voor het overschrijven van bestaande data
+            file_path
+        ]
         result = subprocess.run(command, capture_output=True, text=True)
-        logging.info(f"TriplyDB CLI output: {result.stdout}")  # Log CLI output
-        logging.info(f"TriplyDB CLI foutmeldingen: {result.stderr}")  # Log eventuele foutmeldingen
-
         if result.returncode == 0:
             logging.info(f"Import succesvol voor graph {graph_name}!")
             return True
@@ -125,7 +118,6 @@ def import_with_triplydb(file_path, cli_path, dataset_name, account_name, graph_
     except Exception as e:
         logging.error(f"Onverwachte fout tijdens import: {e}")
         return False
-
 
 # Parallel importeren van graphs
 def import_graph_parallel(graphs, merged_file, cli_path, dataset_name, account_name, token):

@@ -41,6 +41,9 @@ datasets:
       - project_code: "1DF17ED4-4A38-0001-C6FF-883013B04AD0"
         graph_name: "https://data.cultureelerfgoed.nl/term/id/cht/thesaurus"
 
+#output:
+#  merged_file_template: "merged_data_<dataset>.trig"
+#  log_file_template: "import_log_<dataset>_<date>.log"
 output:
-  merged_file_template: "merged_data_<dataset>.trig"
-  log_file_template: "import_log_<dataset>_<date>.log"
+  merged_file_template: "merged_data_<dataset>_v<number>.trig"
+  log_file_template: "import_log_<dataset>_v<number>.log"
