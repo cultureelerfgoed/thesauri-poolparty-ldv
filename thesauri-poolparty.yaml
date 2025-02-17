@@ -35,7 +35,7 @@ datasets:
     projects:
       - project_code: "f475b9b7-177b-430f-b7eb-5ccc2420ad69"
         graph_name: "https://data.cultureelerfgoed.nl/term/id/rn/2/thesaurus"
-        
+
   cht:
     projects:
       - project_code: "1DF17ED4-4A38-0001-C6FF-883013B04AD0"
