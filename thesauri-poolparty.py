@@ -26,7 +26,7 @@ def setup_logging(log_file):
         format="%(asctime)s - %(levelname)s - %(message)s",
         handlers=[
             logging.FileHandler(log_file),  # Log naar bestand
-            logging.StreamHandler()  # Log naar console
+            logging.StreamHandler()         # Log naar console
         ]
     )
 
@@ -105,7 +105,7 @@ def import_with_triplydb(file_path, cli_path, dataset_name, account_name, graph_
             "--account", account_name,
             "--token", token,
             "--default-graph-name", graph_name,
-            "--mode", "merge",
+            "--mode", "merge",  # Merge: om overwrite-bug te omzeilen
             file_path
         ]
         result = subprocess.run(command, capture_output=True, text=True)
@@ -129,6 +129,31 @@ def import_graph_parallel(graphs, merged_file, cli_path, dataset_name, account_n
     with ThreadPoolExecutor() as executor:
         results = list(executor.map(import_task, graphs))
     return results
+
+# Service synchroniseren via de TriplyDB API
+def sync_triplydb_service(token, instance, account, dataset, service_name):
+    """
+    Roept de TriplyDB API aan om een bestaande service te synchroniseren.
+    service_name is bijvoorbeeld 'archeologischbasisregister-jena' of 'archeologischbasisregister-virtuoso'.
+    """
+    url = f"https://{instance}/datasets/{account}/{dataset}/services/{service_name}"
+    headers = {
+        "Authorization": f"Bearer {token}",
+        "Content-Type": "application/json"
+    }
+    data = {"sync": "true"}
+    logging.info(f"Start synchroniseren van service '{service_name}' voor dataset '{dataset}'...")
+    try:
+        response = requests.post(url, headers=headers, json=data)
+        if response.status_code == 200:
+            logging.info(f"Service '{service_name}' succesvol gesynchroniseerd voor dataset '{dataset}'!")
+            return True
+        else:
+            logging.error(f"Fout bij synchroniseren service '{service_name}': {response.status_code}, {response.text}")
+            return False
+    except Exception as e:
+        logging.error(f"Onverwachte fout bij service sync '{service_name}': {e}")
+        return False
 
 # Upload een logbestand als asset naar TriplyDB
 def upload_asset(file_path, cli_path, dataset_name, account_name, token):
@@ -156,14 +181,17 @@ def upload_asset(file_path, cli_path, dataset_name, account_name, token):
 
 # Hoofdproces
 def main():
-    # Laad configuratie
+    # 1. Laad configuratie
     config = load_config()
     triplydb_config = config["triplydb"]
     poolparty_config = config["poolparty"]
     datasets = config["datasets"]
     output_config = config["output"]
 
-    # Verwerk elke dataset afzonderlijk
+    # Haal evt. de TriplyDB instance uit de config of gebruik een standaard (bijv. api.triplydb.com).
+    instance = triplydb_config.get("instance", "api.triplydb.com")
+
+    # 2. Verwerk elke dataset afzonderlijk
     for dataset_name, dataset_config in datasets.items():
         log_file = output_config["log_file_template"].replace("<dataset>", dataset_name).replace("<date>", datetime.now().strftime("%Y%m%d"))
         merged_file = output_config["merged_file_template"].replace("<dataset>", dataset_name)
@@ -172,7 +200,7 @@ def main():
         temp_files = []
 
         try:
-            # Exporteer data per project
+            # a. Exporteer data per project
             for project in dataset_config["projects"]:
                 project_code = project["project_code"]
                 file_name = f"{project_code}.trig"
@@ -182,21 +210,48 @@ def main():
                 elif os.path.exists(file_name):
                     temp_files.append((file_name, project["graph_name"]))
 
-            # Merge bestanden als nodig
+            # b. Merge bestanden als nodig
             if should_merge([file[0] for file in temp_files], merged_file):
                 merge_files([file[0] for file in temp_files], merged_file)
             else:
                 logging.info(f"Samengevoegd bestand '{merged_file}' is up-to-date, overslaan...")
 
-            # Parallel importeren naar TriplyDB
+            # c. Parallel importeren naar TriplyDB
             graph_names = [graph_name for _, graph_name in temp_files]
-            import_graph_parallel(graph_names, merged_file, triplydb_config["cli_path"], dataset_name, triplydb_config["account"], triplydb_config["token"])
+            import_graph_parallel(
+                graph_names,
+                merged_file,
+                triplydb_config["cli_path"],
+                dataset_name,
+                triplydb_config["account"],
+                triplydb_config["token"]
+            )
 
-            # Upload logbestand als asset
-            upload_asset(log_file, triplydb_config["cli_path"], dataset_name, triplydb_config["account"], triplydb_config["token"])
+            # d. Upload logbestand als asset
+            upload_asset(
+                log_file,
+                triplydb_config["cli_path"],
+                dataset_name,
+                triplydb_config["account"],
+                triplydb_config["token"]
+            )
+
+            # e. Services synchroniseren (alleen als deze gedefinieerd zijn)
+            services = dataset_config.get("services", [])
+            for service_name in services:
+                sync_triplydb_service(
+                    triplydb_config["token"],
+                    instance,
+                    triplydb_config["account"],
+                    dataset_name,
+                    service_name
+                )
 
         finally:
+            # Sluit logging netjes af
             close_logging()
+
+            # Verwijder tijdelijke bestanden
             for file_name, _ in temp_files:
                 os.remove(file_name)
             os.remove(log_file)
