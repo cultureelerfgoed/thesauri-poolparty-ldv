@@ -189,7 +189,7 @@ def main():
     output_config = config["output"]
 
     # Haal evt. de TriplyDB instance uit de config of gebruik een standaard (bijv. api.triplydb.com).
-    instance = triplydb_config.get("instance", "api.linkeddata.cultureelerfgoed.nl)
+    instance = triplydb_config.get("instance", "api.linkeddata.cultureelerfgoed.nl")
 
     # 2. Verwerk elke dataset afzonderlijk
     for dataset_name, dataset_config in datasets.items():
