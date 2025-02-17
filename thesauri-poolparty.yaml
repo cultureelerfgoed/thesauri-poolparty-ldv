@@ -43,4 +43,4 @@ datasets:
 
 output:
   merged_file_template: "merged_data_<dataset>.trig"
-  log_file_template: "import_log_<dataset>_<date>.log"
+  log_file_template: "import_log_<dataset>.log"

@@ -105,6 +105,7 @@ def import_with_triplydb(file_path, cli_path, dataset_name, account_name, graph_
             "--account", account_name,
             "--token", token,
             "--default-graph-name", graph_name,
+
             "--mode", "overwrite",  # Correcte optie voor het overschrijven van bestaande data
             file_path
         ]
@@ -165,8 +166,10 @@ def main():
 
     # Verwerk elke dataset afzonderlijk
     for dataset_name, dataset_config in datasets.items():
-        log_file = output_config["log_file_template"].replace("<dataset>", dataset_name).replace("<date>", datetime.now().strftime("%Y%m%d"))
+        log_file = output_config["log_file_template"].replace("<dataset>", dataset_name)
         merged_file = output_config["merged_file_template"].replace("<dataset>", dataset_name)
+       # log_file = output_config["log_file_template"].replace("<dataset>", dataset_name).replace("<date>", datetime.now().strftime("%Y%m%d"))
+       # merged_file = output_config["merged_file_template"].replace("<dataset>", dataset_name)
         setup_logging(log_file)
 
         temp_files = []
