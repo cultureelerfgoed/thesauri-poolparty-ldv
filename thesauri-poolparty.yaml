@@ -3,9 +3,6 @@ triplydb:
   account: "thesauri"            # Accountnaam voor TriplyDB
   token: ""                 # Leeg, wordt overschreven door omgevingsvariabele
 
-env:
-  TRIPLYDB_TOKEN: ${{ secrets.TRIPLYDB_TOKEN }}
-
 poolparty:
   export_url_template: "https://data.cultureelerfgoed.nl/PoolParty/api/projects/{}/export"
   auth_headers:
@@ -43,8 +40,8 @@ datasets:
         graph_name: "https://data.cultureelerfgoed.nl/term/id/abr/thesaurus"
     # Nieuwe regel:
     services:
-      - "referentienetwerk-jena"
-      - "referentienetwerk-virtuoso"
+      - "archeologischbasisregister-jena"
+      - "archeologischbasisregister-virtuoso"
 
   referentienetwerk:
     projects:
@@ -52,8 +49,8 @@ datasets:
         graph_name: "https://data.cultureelerfgoed.nl/term/id/rn/2/thesaurus"
     # geen services hier
     services:
-      - "archeologischbasisregister-jena"
-      - "archeologischbasisregister-virtuoso"
+      - "referentienetwerk-jena"
+      - "referentienetwerk-virtuoso"
 
   cht:
     projects:
