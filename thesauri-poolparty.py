@@ -105,7 +105,7 @@ def import_with_triplydb(file_path, cli_path, dataset_name, account_name, graph_
             "--account", account_name,
             "--token", token,
             "--default-graph-name", graph_name,
-            "--mode", "merge", overwrite,
+            "--mode", "overwrite",  # Correcte optie voor het overschrijven van bestaande data
             file_path
         ]
         result = subprocess.run(command, capture_output=True, text=True)
