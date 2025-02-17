@@ -97,27 +97,27 @@ def merge_files(input_files, output_file):
 # Importeer een bestand naar TriplyDB via de CLI
 def import_with_triplydb(file_path, cli_path, dataset_name, account_name, graph_name, token):
     logging.info(f"Start met importeren van '{file_path}' naar graph '{graph_name}' in dataset '{dataset_name}'...")
-    try:
-        command = [
-            cli_path,
-            "import-from-file",
-            "--dataset", dataset_name,
-            "--account", account_name,
-            "--token", token,
-            "--default-graph-name", graph_name,
 
-            "--mode", "overwrite",  # Correcte optie voor het overschrijven van bestaande data
-            file_path
-        ]
-        result = subprocess.run(command, capture_output=True, text=True)
-        if result.returncode == 0:
-            logging.info(f"Import succesvol voor graph {graph_name}!")
-            return True
-        else:
-            logging.error(f"Fout bij importeren van '{file_path}' naar graph '{graph_name}': {result.stderr}")
-            return False
-    except Exception as e:
-        logging.error(f"Onverwachte fout tijdens import: {e}")
+    # Encodeer de slash in de graph_name
+    graph_name_encoded = graph_name.replace('/', '%2F')
+
+    command = [
+        cli_path,
+        "import-from-file",
+        "--dataset", dataset_name,
+        "--account", account_name,
+        "--token", token,
+        "--default-graph-name", graph_name_encoded,
+        "--mode", "overwrite",
+        file_path
+    ]
+
+    result = subprocess.run(command, capture_output=True, text=True)
+    if result.returncode == 0:
+        logging.info(f"Import succesvol voor graph {graph_name}!")
+        return True
+    else:
+        logging.error(f"Fout bij importeren van '{file_path}' naar graph '{graph_name}': {result.stderr}")
         return False
 
 # Parallel importeren van graphs
