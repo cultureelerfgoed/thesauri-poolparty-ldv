@@ -165,7 +165,7 @@ def main():
 
     # Verwerk elke dataset afzonderlijk
     for dataset_name, dataset_config in datasets.items():
-        log_file = output_config["log_file_template"].replace("<dataset>", dataset_name).replace("<date>", datetime.now().strftime("%Y.%m.%d"))
+        log_file = output_config["log_file_template"].replace("<dataset>", dataset_name).replace("<date>", datetime.now().strftime("%Y%m%d"))
         merged_file = output_config["merged_file_template"].replace("<dataset>", dataset_name)
         setup_logging(log_file)
 
