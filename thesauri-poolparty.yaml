@@ -16,7 +16,7 @@ datasets:
         graph_name: "https://data.niod.nl/WO2_Thesaurus/thesaurus"
       - project_code: "1E0320A6-62BA-0001-FCF2-1C301C80F490"
         graph_name: "https://data.niod.nl/WO2_biografieen/thesaurus"
-    # geen services hier
+    # services hier
     services:
       - "oorlogsbronnen-jena"
       - "oorlogsbronnen-virtuoso"
@@ -29,7 +29,7 @@ datasets:
         graph_name: "https://data.cultureelerfgoed.nl/term/id/rn/2/thesaurus"
       - project_code: "cb410a13-a6e8-4077-a02c-412a93714114"
         graph_name: "https://data.cultureelerfgoed.nl/term/id/abr/thesaurus"
-    # geen services hier
+    # services hier
     services:
       - "Cultuurhistorische-Thesaurus-CHT-jena"
       - "Cultuurhistorische-Thesaurus-CHT"
@@ -38,7 +38,7 @@ datasets:
     projects:
       - project_code: "cb410a13-a6e8-4077-a02c-412a93714114"
         graph_name: "https://data.cultureelerfgoed.nl/term/id/abr/thesaurus"
-    # Nieuwe regel:
+    # services hier
     services:
       - "archeologischbasisregister-jena"
       - "archeologischbasisregister-virtuoso"
@@ -47,7 +47,7 @@ datasets:
     projects:
       - project_code: "f475b9b7-177b-430f-b7eb-5ccc2420ad69"
         graph_name: "https://data.cultureelerfgoed.nl/term/id/rn/2/thesaurus"
-    # geen services hier
+    # services hier
     services:
       - "referentienetwerk-jena"
       - "referentienetwerk-virtuoso"
@@ -56,8 +56,7 @@ datasets:
     projects:
       - project_code: "1DF17ED4-4A38-0001-C6FF-883013B04AD0"
         graph_name: "https://data.cultureelerfgoed.nl/term/id/cht/thesaurus"
-    # geen services hier
-        # Nieuwe regel:
+    # services hier
     services:
       - "cht-jena"
       - "cht-virtuoso"
