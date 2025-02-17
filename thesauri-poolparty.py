@@ -97,27 +97,26 @@ def merge_files(input_files, output_file):
 # Importeer een bestand naar TriplyDB via de CLI
 def import_with_triplydb(file_path, cli_path, dataset_name, account_name, graph_name, token):
     logging.info(f"Start met importeren van '{file_path}' naar graph '{graph_name}' in dataset '{dataset_name}'...")
-
-    # Encodeer de slash in de graph_name
-    graph_name_encoded = graph_name.replace('/', '%2F')
-
-    command = [
-        cli_path,
-        "import-from-file",
-        "--dataset", dataset_name,
-        "--account", account_name,
-        "--token", token,
-        "--default-graph-name", graph_name_encoded,
-        "--mode", "overwrite",
-        file_path
-    ]
-
-    result = subprocess.run(command, capture_output=True, text=True)
-    if result.returncode == 0:
-        logging.info(f"Import succesvol voor graph {graph_name}!")
-        return True
-    else:
-        logging.error(f"Fout bij importeren van '{file_path}' naar graph '{graph_name}': {result.stderr}")
+    try:
+        command = [
+            cli_path,
+            "import-from-file",
+            "--dataset", dataset_name,
+            "--account", account_name,
+            "--token", token,
+            "--default-graph-name", f"\"{graph_name}\"",
+            "--mode", "overwrite",
+            file_path
+        ]
+        result = subprocess.run(command, capture_output=True, text=True)
+        if result.returncode == 0:
+            logging.info(f"Import succesvol voor graph {graph_name}!")
+            return True
+        else:
+            logging.error(f"Fout bij importeren van '{file_path}' naar graph '{graph_name}': {result.stderr}")
+            return False
+    except Exception as e:
+        logging.error(f"Onverwachte fout tijdens import: {e}")
         return False
 
 # Parallel importeren van graphs
@@ -166,10 +165,8 @@ def main():
 
     # Verwerk elke dataset afzonderlijk
     for dataset_name, dataset_config in datasets.items():
-        log_file = output_config["log_file_template"].replace("<dataset>", dataset_name)
+        log_file = output_config["log_file_template"].replace("<dataset>", dataset_name).replace("<date>", datetime.now().strftime("%Y%m%d"))
         merged_file = output_config["merged_file_template"].replace("<dataset>", dataset_name)
-       # log_file = output_config["log_file_template"].replace("<dataset>", dataset_name).replace("<date>", datetime.now().strftime("%Y%m%d"))
-       # merged_file = output_config["merged_file_template"].replace("<dataset>", dataset_name)
         setup_logging(log_file)
 
         temp_files = []
