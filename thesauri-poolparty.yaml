@@ -61,6 +61,19 @@ datasets:
       - "cht-jena"
       - "cht-virtuoso"
 
+#hieronder testproject van Triply voor JENA
+  thesauri:
+    projects:
+      - project_code: "1DF17ED4-4A38-0001-C6FF-883013B04AD0"
+        graph_name: "https://data.cultureelerfgoed.nl/term/id/cht/thesaurus"
+      - project_code: "1DE00318-CB07-0001-FBB4-C620F33C1540"
+        graph_name: "https://data.niod.nl/WO2_Thesaurus/thesaurus"
+      - project_code: "1E0320A6-62BA-0001-FCF2-1C301C80F490"
+        graph_name: "https://data.niod.nl/WO2_biografieen/thesaurus"
+    # services hier
+    services:
+      - "thesauri"
+
 output:
   merged_file_template: "merged_data_<dataset>.trig"
   log_file_template: "import_log_<dataset>_<date>.log"
