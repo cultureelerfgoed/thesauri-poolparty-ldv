@@ -62,7 +62,7 @@ datasets:
       - "cht-virtuoso"
       
 # Dit is een tijdelijke tot PoolParty SPARQL Endpoint weer beter werkt
-  homosaurus: 0065dd93-d8bb-4e58-9106-0e3d34fb98cd
+  homosaurus:
     projects:
       - project_code: "0065dd93-d8bb-4e58-9106-0e3d34fb98cd"
         graph_name: "https://data.ihlia.nl/homosaurus/thesaurus"
