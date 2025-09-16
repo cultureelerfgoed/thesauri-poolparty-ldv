@@ -1,0 +1,13 @@
+name: Keep-alive
+
+on:
+  schedule:
+    - cron: "15 1 * * 0"   # wekelijks, zondag 01:15 UTC
+  workflow_dispatch:        # handmatig kunnen starten
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    permissions: {}         # geen tokenrechten nodig
+    steps:
+      - run: echo "keep alive $(date -u)"
