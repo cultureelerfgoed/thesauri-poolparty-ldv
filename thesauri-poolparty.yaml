@@ -1,6 +1,6 @@
 triplydb:
   cli_path: "triplydb.exe"  # Pad naar TriplyDB CLI
-  account: "rce"            # Accountnaam voor TriplyDB
+  account: "thesauri"            # Accountnaam voor TriplyDB
   token: ""                 # Leeg, wordt overschreven door omgevingsvariabele
 
 poolparty:
@@ -10,16 +10,16 @@ poolparty:
     Content-Type: "application/json"
 
 datasets:
-  thesauri:
+  oorlogsbronnen:
     projects:
       - project_code: "1DE00318-CB07-0001-FBB4-C620F33C1540"
         graph_name: "https://data.niod.nl/WO2_Thesaurus/thesaurus"
-      - project_code: "1DF16AC7-7868-0001-EBB8-E60098F4D110"
-        graph_name: "https://data.niod.nl/Organizations/thesaurus"
       - project_code: "1E0320A6-62BA-0001-FCF2-1C301C80F490"
         graph_name: "https://data.niod.nl/WO2_biografieen/thesaurus"
-      - project_code: "1DF17ED4-4A38-0001-C6FF-883013B04AD0"
-        graph_name: "https://data.cultureelerfgoed.nl/term/id/cht/thesaurus"
+    # services hier
+    services:
+      - "oorlogsbronnen-jena"
+      - "oorlogsbronnen-virtuoso"
 
   Cultuurhistorische-Thesaurus-CHT:
     projects:
@@ -27,11 +27,62 @@ datasets:
         graph_name: "https://data.cultureelerfgoed.nl/term/id/cht/thesaurus"
       - project_code: "f475b9b7-177b-430f-b7eb-5ccc2420ad69"
         graph_name: "https://data.cultureelerfgoed.nl/term/id/rn/2/thesaurus"
+      - project_code: "cb410a13-a6e8-4077-a02c-412a93714114"
+        graph_name: "https://data.cultureelerfgoed.nl/term/id/abr/thesaurus"
+    # services hier
+    services:
+      - "Cultuurhistorische-Thesaurus-CHT-jena"
+      - "Cultuurhistorische-Thesaurus-CHT"
 
   archeologischbasisregister:
     projects:
       - project_code: "cb410a13-a6e8-4077-a02c-412a93714114"
         graph_name: "https://data.cultureelerfgoed.nl/term/id/abr/thesaurus"
+    # services hier
+    services:
+      - "archeologischbasisregister-jena"
+      - "archeologischbasisregister-virtuoso"
+
+  referentienetwerk:
+    projects:
+      - project_code: "f475b9b7-177b-430f-b7eb-5ccc2420ad69"
+        graph_name: "https://data.cultureelerfgoed.nl/term/id/rn/2/thesaurus"
+    # services hier
+    services:
+      - "referentienetwerk-jena"
+      - "referentienetwerk-virtuoso"
+
+  cht:
+    projects:
+      - project_code: "1DF17ED4-4A38-0001-C6FF-883013B04AD0"
+        graph_name: "https://data.cultureelerfgoed.nl/term/id/cht/thesaurus"
+    # services hier
+    services:
+      - "cht-jena"
+      - "cht-virtuoso"
+      
+# Dit is een tijdelijke tot PoolParty SPARQL Endpoint weer beter werkt
+  homosaurus:
+    projects:
+      - project_code: "0065dd93-d8bb-4e58-9106-0e3d34fb98cd"
+        graph_name: "https://data.ihlia.nl/homosaurus/thesaurus"
+    # services hier
+    services:
+      - "homosaurus-jena"
+      - "homosaurus-virtuoso"
+
+#hieronder testproject van Triply voor JENA
+  thesauri:
+    projects:
+      - project_code: "1DF17ED4-4A38-0001-C6FF-883013B04AD0"
+        graph_name: "https://data.cultureelerfgoed.nl/term/id/cht/thesaurus"
+      - project_code: "1DE00318-CB07-0001-FBB4-C620F33C1540"
+        graph_name: "https://data.niod.nl/WO2_Thesaurus/thesaurus"
+      - project_code: "1E0320A6-62BA-0001-FCF2-1C301C80F490"
+        graph_name: "https://data.niod.nl/WO2_biografieen/thesaurus"
+    # services hier
+    services:
+      - "thesauri"
 
 output:
   merged_file_template: "merged_data_<dataset>.trig"
