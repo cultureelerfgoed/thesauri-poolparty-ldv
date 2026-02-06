@@ -47,7 +47,7 @@ def export_rdf_data(project_code, export_url_template, headers, output_file):
         response = requests.post(
             export_url_template.format(project_code),
             headers=headers,
-            json={"prettyPrint": True, "format": "TriG", "modules": ["concepts"]}
+            json={"prettyPrint": True, "format": "TriG", "modules": ["concepts", "void", "adms"]}
         )
         if response.status_code == 200:
             logging.info(f"Export succesvol voor project {project_code}!")
