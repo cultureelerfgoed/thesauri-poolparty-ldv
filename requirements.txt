@@ -1,2 +1,2 @@
-requests>=2.34.0,<3
+requests>=2.34.2,<3
 PyYAML==6.0.3
