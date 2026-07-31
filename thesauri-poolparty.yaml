@@ -36,8 +36,8 @@ datasets:
 
   archeologischbasisregister:
     projects:
-      - project_code: "cb410a13-a6e8-4077-a02c-412a93714114"
-        graph_name: "https://data.cultureelerfgoed.nl/term/id/abr/thesaurus"
+      - project_code: "1bfbc515-5bee-4c49-86aa-fb03c8ee3667"
+        graph_name: "https://data.cultureelerfgoed.nl/term/id/abr/2/thesaurus"
     # services hier
     services:
       - "archeologischbasisregister-jena"
