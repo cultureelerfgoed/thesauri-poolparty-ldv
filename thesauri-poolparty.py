@@ -237,7 +237,7 @@ def main():
             )
 
             # e. Services synchroniseren (alleen als deze gedefinieerd zijn)
-            services = dataset_config.get("services", [])
+            services = dataset_config.get("services") or []
             for service_name in services:
                 sync_triplydb_service(
                     triplydb_config["token"],
