@@ -71,6 +71,16 @@ datasets:
       - "homosaurus-jena"
       - "homosaurus-virtuoso"
 
+# Termennetwerk onderwerpen lijst
+  onderwerpen_not:
+    projects:
+      - project_code: "0ead122f-3caf-4780-a85c-b395574b2e71"
+        graph_name: "https://data.cultureelerfgoed.nl/termennetwerk/onderwerpen/thesaurus"
+    # services hier
+    services:
+      - "homosaurus-jena"
+      - "homosaurus-virtuoso"
+
 #hieronder testproject van Triply voor JENA
   thesauri:
     projects:
