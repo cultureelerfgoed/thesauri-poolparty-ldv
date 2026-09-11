@@ -162,4 +162,3 @@ output:
 ## Licentie
 
 Dit project valt onder de MIT-licentie. Zie het bestand `LICENSE` voor meer informatie.
-
