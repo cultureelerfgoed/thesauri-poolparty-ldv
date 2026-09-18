@@ -79,6 +79,15 @@ datasets:
     # services hier
     services:
       - "onderwerpen-not"
+      
+# Rechtenstatements
+  rechtenstatus-en-gebruiksrechten:
+    projects:
+      - project_code: "e0ebf95-4471-4e0f-a13a-45fc77329ebf"
+        graph_name: "https://data.cultureelerfgoed.nl/rights/thesaurus"
+    # services hier
+    services:
+      - "rechtenstatus-en-gebruiksrechten"
 
 #hieronder testproject van Triply voor JENA
   thesauri:
