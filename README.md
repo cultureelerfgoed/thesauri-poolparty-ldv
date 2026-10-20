@@ -1,164 +1,265 @@
-# thesauri-poolparty-ldv
-Automatiseer PoolParty-extracties naar TriplyDB met Python en GitHub Actions.
+# Thesauri van PoolParty naar de LDV
 
+Deze repository automatiseert de export van thesauri uit PoolParty
+naar TriplyDB voor de Linked Data Voorziening (LDV) van de
+Rijksdienst voor het Cultureel Erfgoed (RCE).
 
-# Thesauri PoolParty to TriplyDB
+Een Python-script haalt RDF-exportbestanden op, voegt ze per
+doeldataset samen en importeert ze via de TriplyDB CLI.
+Daarna uploadt het script een logbestand en vraagt het synchronisatie
+aan voor de ingestelde publicatieservices.
 
-Dit project automatiseert het exporteren van thesauri uit PoolParty en het importeren ervan naar datasets in TriplyDB. Het script haalt RDF-data van PoolParty op, verwerkt deze lokaal en uploadt deze naar specifieke datasets in TriplyDB, met ondersteuning voor meerdere projecten en datasets.
+## Onderdelen
 
-## Overzicht
+| Bestand | Functie |
+|---|---|
+| `thesauri-poolparty.py` | Export, samenvoeging, import en serviceverzoeken |
+| `thesauri-poolparty.yaml` | Projecten, datasets, graphnamen en services |
+| `requirements.txt` | Python-afhankelijkheden |
+| `.github/workflows/deploy.yml` | Geplande en handmatige uitvoering |
+| `.github/workflows/keep-alive.yml` | Aanvullende onderhoudsworkflow |
+| `.github/dependabot.yml` | Configuratie voor afhankelijkheidsupdates |
+| `tools/` | Meegeleverde hulpmiddelen |
 
-- **Bron**: PoolParty API
-- **Doel**: TriplyDB-datasets
-- **Talen**: Python 3.11
-- **Workflow**: GitHub Actions voor automatisering
-- **CLI**: TriplyDB CLI (`triplydb.exe`) wordt gebruikt voor het importeren en uploaden van data.
+## Gegevensverwerking
 
----
+Het script verwerkt de datasets uit de YAML-configuratie achter elkaar.
 
-## Functies
+Per dataset voert het script deze stappen uit:
 
-1. **Meerdere projecten ondersteunen**:
-   - Elk project in PoolParty wordt geëxporteerd naar een specifieke graph in een TriplyDB-dataset.
-2. **Configuratie in YAML**:
-   - Alle projecten en datasets worden gedefinieerd in een configuratiebestand (`thesauri-poolparty.yaml`).
-3. **Logbeheer**:
-   - Logs worden geüpload als assets naar de respectieve TriplyDB-datasets.
-4. **Beveiliging via Secrets**:
-   - Gevoelige gegevens zoals authenticatietokens worden opgeslagen als GitHub Secrets.
-5. **Automatische workflow via GitHub Actions**:
-   - Exporteer, verwerk en upload data met één push naar de repository.
+1. Exporteer de ingestelde PoolParty-projecten als TriG.
+2. Vraag daarbij de modules `concepts`, `void` en `adms` op.
+3. Sla de projectexports tijdelijk op.
+4. Voeg de beschikbare exports samen tot één bestand.
+5. Start parallelle importopdrachten voor de ingestelde graphnamen.
+6. Upload het logbestand als asset naar de dataset.
+7. Vraag synchronisatie aan voor de ingestelde services.
+8. Verwijder de tijdelijke projectbestanden en het lokale logbestand.
 
----
+Het samengevoegde TriG-bestand blijft lokaal staan.
 
-## Bestandsstructuur
+## Configuratie
 
-```plaintext
-thesauri-poolparty/
-├── thesauri-poolparty.py        # Python-script voor verwerking
-├── thesauri-poolparty.yaml      # Configuratiebestand
-├── tools/
-│   └── triplydb.exe             # TriplyDB CLI
-├── .github/
-│   └── workflows/
-│       └── deploy.yml           # GitHub Actions workflow
-└── README.md                    # Projectdocumentatie
+Alle instellingen staan in `thesauri-poolparty.yaml`.
+
+### TriplyDB
+
+| Instelling | Functie |
+|---|---|
+| `cli_path` | Pad naar de TriplyDB CLI |
+| `account` | Doelaccount, momenteel `thesauri` |
+| `token` | Token; gebruik hiervoor de omgevingsvariabele `TRIPLYDB_TOKEN` |
+| `instance` | Optionele API-host voor de serviceverzoeken |
+
+Als `instance` ontbreekt, gebruikt het script voor serviceverzoeken:
+
+`api.linkeddata.cultureelerfgoed.nl`
+
+De CLI-opdrachten voor import en asset-upload krijgen geen expliciete
+`--url` mee. Controleer daarom afzonderlijk welke TriplyDB-instantie
+de CLI gebruikt. De instelling `instance` geldt in de huidige code
+alleen voor de serviceverzoeken.
+
+### PoolParty
+
+De export-URL is:
+
+`https://data.cultureelerfgoed.nl/PoolParty/api/projects/{}/export`
+
+Het script vervangt `{}` door de ingestelde projectcode.
+
+De omgevingsvariabele `POOLPARTY_AUTH` levert de volledige waarde
+voor de HTTP-header `Authorization`.
+
+### Projecten en datasets
+
+Elke dataset bevat:
+
+- `projects`: PoolParty-projectcodes met bijbehorende graphnamen;
+- `services`: namen van bestaande services waarvoor het script
+  synchronisatie aanvraagt.
+
+De configuratie bevat momenteel deze doeldatasets:
+
+| Dataset | Inhoud volgens de configuratie |
+|---|---|
+| `oorlogsbronnen` | WO2-thesaurus en WO2-biografieën |
+| `Cultuurhistorische-Thesaurus-CHT` | Combinatie van CHT-, referentienetwerk- en ABR-projecten |
+| `archeologischbasisregister` | ABR-project met graph-URI voor versie 2 |
+| `referentienetwerk` | Referentienetwerk |
+| `cht` | Cultuurhistorische Thesaurus |
+| `homosaurus` | Homosaurus; gemarkeerd als tijdelijke oplossing |
+| `onderwerpen-not` | Onderwerpenlijst voor het Termennetwerk |
+| `rechtenstatus-en-gebruiksrechten` | Rechtenstatements |
+| `thesauri` | Combinatie van projecten, gemarkeerd als testproject voor Jena |
+
+De YAML-configuratie is leidend voor de exacte projectcodes,
+graph-URI's en servicenamen.
+
+## Uitvoeren via GitHub Actions
+
+De workflow heet **Deploy Thesauri PoolParty**.
+
+### Automatisch
+
+De workflow staat dagelijks gepland om **03:00 UTC**:
+
+- 04:00 uur in de Nederlandse wintertijd;
+- 05:00 uur in de Nederlandse zomertijd.
+
+Een push naar de repository start deze workflow niet.
+
+### Handmatig
+
+1. Open de tab **Actions**.
+2. Kies **Deploy Thesauri PoolParty**.
+3. Klik op **Run workflow**.
+4. Controleer na afloop de uitvoer en importlogs.
+
+### Secrets
+
+Stel deze repositorysecrets in onder:
+
+**Settings > Secrets and variables > Actions > New repository secret**
+
+| Secret | Functie |
+|---|---|
+| `TRIPLYDB_TOKEN` | Authenticatie voor TriplyDB |
+| `POOLPARTY_AUTH` | Waarde voor de PoolParty-header `Authorization` |
+
+De workflow draait op Windows met Python 3.11.
+Hij installeert de Python-afhankelijkheden en downloadt de TriplyDB CLI.
+
+## Lokaal uitvoeren op Windows
+
+Let op: het script voert echte imports uit.
+Er is geen proefmodus zonder wijzigingen aan TriplyDB.
+
+### 1. Repository ophalen
+
+```text
+git clone https://github.com/cultureelerfgoed/thesauri-poolparty-ldv.git
+cd thesauri-poolparty-ldv
 ```
 
----
+### 2. Python-afhankelijkheden installeren
 
-## Installatie en Gebruik
-
-### 1. Vereisten
-
-- **Python 3.11**: Download [hier](https://www.python.org/downloads/).
-- **GitHub Desktop**: Voor het lokaal beheren van deze repository ([Download hier](https://desktop.github.com/)).
-
-### 2. Repository klonen
-
-Kloon de repository naar uw lokale machine:
-```bash
-git clone https://github.com/cultureelerfgoed/thesauri-poolparty.git
-cd thesauri-poolparty
+```text
+python -m pip install -r requirements.txt
 ```
 
-### 3. Installeer Python-pakketten
+### 3. CLI instellen
 
-Voer de volgende commando's uit om afhankelijkheden te installeren:
-```bash
-pip install -r requirements.txt
+Zorg dat `cli_path` in `thesauri-poolparty.yaml` verwijst
+naar een beschikbare TriplyDB CLI.
+
+### 4. Authenticatie instellen
+
+Gebruik in PowerShell:
+
+```powershell
+$env:TRIPLYDB_TOKEN = "<jouw-triplydb-token>"
+$env:POOLPARTY_AUTH = "<jouw-volledige-authorization-header>"
 ```
 
-### 4. Configureren van omgevingsvariabelen (lokaal)
+Sla deze waarden niet op in de repository.
 
-Stel de volgende omgevingsvariabelen in:
-- **Windows**:
-  ```bash
-  set TRIPLYDB_TOKEN=<uw-triplydb-token>
-  set POOLPARTY_AUTH=<uw-poolparty-auth>
-  ```
-- **Linux/Mac**:
-  ```bash
-  export TRIPLYDB_TOKEN=<uw-triplydb-token>
-  export POOLPARTY_AUTH=<uw-poolparty-auth>
-  ```
+### 5. Script starten
 
-### 5. Draai het script lokaal
+Voer het script uit vanuit de hoofdmap van de repository:
 
-Om het script lokaal te draaien:
-```bash
+```text
 python thesauri-poolparty.py
 ```
 
----
+## Uitvoer en logging
 
-## Automatisering via GitHub Actions
+| Bestand | Functie |
+|---|---|
+| `<project_code>.trig` | Tijdelijke export van één PoolParty-project |
+| `merged_data_<dataset>.trig` | Samengevoegde exports voor een dataset |
+| `import_log_<dataset>_<date>.log` | Verwerkingslog per dataset |
 
-De GitHub Actions workflow (`deploy.yml`) automatiseert het proces van exporteren, verwerken en uploaden naar TriplyDB. Dit gebeurt automatisch bij elke push naar de `main`-branch.
+Het script probeert het logbestand als asset naar TriplyDB te uploaden.
+Het verwijdert daarna het lokale logbestand.
 
-### 1. Secrets instellen
+De serviceverzoeken vinden plaats na de logupload.
+Het geüploade log bevat daardoor niet de latere meldingen
+over die serviceverzoeken. Die staan wel in de console-uitvoer.
 
-Voeg de volgende secrets toe aan uw GitHub-repository via **Settings > Secrets and variables > Actions**:
+## Importgedrag
 
-- `TRIPLYDB_TOKEN`: Uw TriplyDB-token.
-- `POOLPARTY_AUTH`: Uw PoolParty-authorization-header.
+De huidige implementatie importeert voor iedere ingestelde graphnaam
+hetzelfde samengevoegde bestand. Daarbij gebruikt het script:
 
-### 2. Workflowoverzicht
+- `--default-graph-name` met de ingestelde graphnaam;
+- `--mode overwrite`.
 
-Bij elke push:
-1. **Checkout repository**: Haalt de laatste wijzigingen op.
-2. **Python-setup**: Installeert de afhankelijkheden.
-3. **Script uitvoeren**: Voert het script uit om data te verwerken.
-4. **Logs opslaan**: Uploadt logbestanden naar de respectieve TriplyDB-datasets.
+Dit is geen afzonderlijke import van uitsluitend de bijbehorende
+projectexport. Controleer bij wijzigingen hoe de CLI de named graphs
+uit het TriG-bestand en de opgegeven default graph verwerkt.
 
----
+De importopdrachten voor één dataset lopen parallel.
 
-## Configuratiebestand (`thesauri-poolparty.yaml`)
+## Servicesynchronisatie
 
-Het configuratiebestand bevat alle informatie over PoolParty-projecten en TriplyDB-datasets.
+Het script verstuurt voor elke ingestelde service een
+synchronisatieverzoek naar de TriplyDB API.
 
-**Voorbeeld:**
-```yaml
-triplydb:
-  cli_path: "C:\\Users\\linkeddata\\Downloads\\triplydb.exe"
-  account: "rce"
-  token: "${TRIPLYDB_TOKEN}"
+Het controleert de HTTP-respons, maar wacht niet totdat de
+service klaar is met synchroniseren. Controleer de servicestatus
+in TriplyDB wanneer je wilt vaststellen of de nieuwe gegevens
+beschikbaar zijn.
 
-poolparty:
-  export_url_template: "https://data.cultureelerfgoed.nl/PoolParty/api/projects/{}/export"
-  auth_headers:
-    Authorization: "${POOLPARTY_AUTH}"
-    Content-Type: "application/json"
+## Controle en foutafhandeling
 
-datasets:
-  thesauri:
-    projects:
-      - project_code: "1DE00318-CB07-0001-FBB4-C620F33C1540"
-        graph_name: "https://data.niod.nl/WO2_Thesaurus/thesaurus"
-      - project_code: "1DF16AC7-7868-0001-FBB8-E60098F4D110"
-        graph_name: "https://data.niod.nl/Organizations/thesaurus"
-      - project_code: "1E0320A6-62BA-0001-FCF2-1C301C80F490"
-        graph_name: "https://data.niod.nl/WO2_biografieen/thesaurus"
+Controleer na uitvoering:
 
-  erfgoedthesaurus:
-    projects:
-      - project_code: "1DF17ED4-4A38-0001-C6FF-883013B04AD0"
-        graph_name: "https://data.cultureelerfgoed.nl/term/id/cht/thesaurus"
-      - project_code: "f475b9b7-177b-430f-b7eb-5ccc2420ad69"
-        graph_name: "https://data.cultureelerfgoed.nl/term/id/rn/2/thesaurus"
+- of alle gewenste PoolParty-projecten zijn geëxporteerd;
+- of alle imports zijn geslaagd;
+- of de juiste graphs in de juiste dataset staan;
+- of het logbestand als asset beschikbaar is;
+- of de publicatieservices de nieuwe gegevens aanbieden.
 
-  archeologisch-basis-register:
-    projects:
-      - project_code: "cb410a13-a6e8-4077-a02c-412a93714114"
-        graph_name: "https://data.cultureelerfgoed.nl/term/id/abr/thesaurus"
+Een succesvolle GitHub Actions-status bewijst niet dat alle
+onderdelen zijn geslaagd. Verschillende functies loggen fouten
+en geven `False` of `None` terug, zonder dat het hoofdproces
+daarop stopt.
 
-output:
-  merged_file_template: "merged_data_<dataset>.trig"
-  log_file_template: "import_log_<dataset>_<date>.log"
-```
+Daardoor kan het script:
 
----
+- doorgaan met alleen de beschikbare projectexports;
+- serviceverzoeken versturen na een mislukte import;
+- het lokale log verwijderen na een mislukte logupload.
+
+Er is geen automatische terugdraaiing van eerdere imports.
+
+## Bestaande lokale bestanden
+
+Als een projectbestand al bestaat, slaat het script de export over
+en gebruikt het dat bestand opnieuw.
+
+Bij een lokale herstart kunnen daardoor oudere exports worden gebruikt.
+Controleer achtergebleven projectbestanden en samengevoegde bestanden
+voordat je opnieuw start.
+
+## Onderhoud
+
+Werk de YAML-configuratie bij wanneer projecten, graphnamen,
+datasets of services veranderen.
+
+Controleer daarnaast periodiek:
+
+- of de tijdelijke Homosaurus-configuratie nog nodig is;
+- of het Jena-testproject `thesauri` nog bij deze verwerking hoort;
+- of CLI-imports en serviceverzoeken dezelfde TriplyDB-instantie gebruiken;
+- of de documentatie overeenkomt met het script en de workflow.
 
 ## Licentie
 
-Dit project valt onder de MIT-licentie. Zie het bestand `LICENSE` voor meer informatie.
+Er staat momenteel geen `LICENSE`-bestand in deze repository.
+De eerdere README noemde MIT, maar die vermelding moet nog
+worden bevestigd en aangevuld met een licentiebestand.
+
+Raadpleeg voor de geëxporteerde thesauri de gebruiksvoorwaarden
+van de betreffende bron.
