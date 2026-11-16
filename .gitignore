@@ -1,0 +1,20 @@
+# uitvoer van een run
+data/
+*.nq.gz
+.triplydb-js.err
+
+# TriplyDB CLI (de workflow haalt hem zelf op)
+triplydb.exe
+triplydb-linux
+
+# Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# lokale geheimen en editors
+.env
+.vscode/
+.idea/

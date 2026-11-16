@@ -1,0 +1,102 @@
+# Instellingen van de PoolParty-ETL. Uitleg per instelling: docs/configuratie.md.
+# Geheimen staan NIET hier maar in omgevingsvariabelen: POOLPARTY_AUTH en TRIPLYDB_TOKEN.
+
+### PoolParty (bron) ###
+poolparty:
+  # {project} wordt vervangen door de projectcode
+  export_url: 'https://data.cultureelerfgoed.nl/PoolParty/api/projects/{project}/export'
+  # deze modules komen elk in een eigen named graph: .../thesaurus, .../metadata/void, .../metadata/adms
+  modules: ['concepts', 'void', 'adms']
+  # seconden per exportverzoek; de CHT (480.000 triples) duurt ongeveer een minuut
+  timeout: 900
+  # pogingen bij een tijdelijke fout (HTTP 5xx, 429, netwerkfout); wachttijd = backoff x poging
+  retries: 4
+  backoff: 15
+
+### TriplyDB / Linked Data Voorziening (doel) ###
+triplydb:
+  url: 'https://api.linkeddata.cultureelerfgoed.nl'
+  account: 'thesauri'
+  # seconden voor één import-from-file
+  import_timeout: 3600
+  # seconden wachten tot een service na de sync weer 'running' en bijgewerkt is
+  sync_timeout: 1800
+  poll_interval: 15
+  # het verwerkingsrapport komt onder deze vaste naam als asset bij elke dataset (een nieuwe run vervangt het)
+  report_asset: 'etl-rapport.json'
+
+### Kwaliteitsbewaking ###
+checks:
+  # minimaal aantal skos:Concept in de thesaurusgraph van een project
+  min_concepts: 1
+  # een export die een graph meer dan dit percentage kleiner maakt dan in de LDV, wordt niet gepubliceerd
+  # (beschermt tegen een afgebroken of halve export). Eenmalig omzeilen: --allow-shrink.
+  max_shrink_percent: 10
+  # na de import moet het aantal statements in de LDV hooguit dit percentage afwijken van de export
+  max_import_deviation_percent: 1
+
+### Datasets ###
+# Per dataset in account `thesauri`: de PoolParty-projecten die erin komen.
+#   project_code  de PoolParty-projectcode (UUID)
+#   graph_name    de thesaurusgraph die het project exporteert; moet in de export voorkomen
+# Elk project wordt per run één keer geëxporteerd, ook als het in meer datasets staat.
+# Alle services van een dataset worden na de import gesynchroniseerd.
+datasets:
+  oorlogsbronnen:
+    projects:
+      - project_code: '1DE00318-CB07-0001-FBB4-C620F33C1540'
+        graph_name: 'https://data.niod.nl/WO2_Thesaurus/thesaurus'
+      - project_code: '1E0320A6-62BA-0001-FCF2-1C301C80F490'
+        graph_name: 'https://data.niod.nl/WO2_biografieen/thesaurus'
+
+  Cultuurhistorische-Thesaurus-CHT:
+    projects:
+      - project_code: '1DF17ED4-4A38-0001-C6FF-883013B04AD0'
+        graph_name: 'https://data.cultureelerfgoed.nl/term/id/cht/thesaurus'
+      - project_code: 'f475b9b7-177b-430f-b7eb-5ccc2420ad69'
+        graph_name: 'https://data.cultureelerfgoed.nl/term/id/rn/2/thesaurus'
+      - project_code: 'cb410a13-a6e8-4077-a02c-412a93714114'
+        graph_name: 'https://data.cultureelerfgoed.nl/term/id/abr/thesaurus'
+
+  archeologischbasisregister:
+    projects:
+      - project_code: '1bfbc515-5bee-4c49-86aa-fb03c8ee3667'
+        graph_name: 'https://data.cultureelerfgoed.nl/term/id/abr/2/thesaurus'
+
+  referentienetwerk:
+    projects:
+      - project_code: 'f475b9b7-177b-430f-b7eb-5ccc2420ad69'
+        graph_name: 'https://data.cultureelerfgoed.nl/term/id/rn/2/thesaurus'
+
+  cht:
+    projects:
+      - project_code: '1DF17ED4-4A38-0001-C6FF-883013B04AD0'
+        graph_name: 'https://data.cultureelerfgoed.nl/term/id/cht/thesaurus'
+
+  # Tijdelijk, tot het SPARQL-endpoint van PoolParty weer goed werkt.
+  homosaurus:
+    projects:
+      - project_code: '0065dd93-d8bb-4e58-9106-0e3d34fb98cd'
+        graph_name: 'https://data.ihlia.nl/homosaurus/thesaurus'
+
+  # Onderwerpenlijst voor het Termennetwerk.
+  onderwerpen-not:
+    projects:
+      - project_code: '0ead122f-3caf-4780-a85c-b395574b2e71'
+        graph_name: 'https://data.cultureelerfgoed.nl/termennetwerk/onderwerpen/thesaurus'
+
+  # Rechtenstatements. Tot november 2026 stond hier de code zonder de eerste 'c'; de export gaf toen elke dag HTTP 500.
+  rechtenstatus-en-gebruiksrechten:
+    projects:
+      - project_code: 'ce0ebf95-4471-4e0f-a13a-45fc77329ebf'
+        graph_name: 'https://data.cultureelerfgoed.nl/rights/thesaurus'
+
+  # Testproject van Triply voor Jena.
+  thesauri:
+    projects:
+      - project_code: '1DF17ED4-4A38-0001-C6FF-883013B04AD0'
+        graph_name: 'https://data.cultureelerfgoed.nl/term/id/cht/thesaurus'
+      - project_code: '1DE00318-CB07-0001-FBB4-C620F33C1540'
+        graph_name: 'https://data.niod.nl/WO2_Thesaurus/thesaurus'
+      - project_code: '1E0320A6-62BA-0001-FCF2-1C301C80F490'
+        graph_name: 'https://data.niod.nl/WO2_biografieen/thesaurus'
