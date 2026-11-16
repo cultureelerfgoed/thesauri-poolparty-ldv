@@ -1,53 +1,128 @@
-name: Deploy Thesauri PoolParty
+name: 'Deploy Thesauri PoolParty'
 
+# Elke dag 03:00 UTC (= 04:00/05:00 Nederlandse tijd). Handmatig starten kan ook.
+# Stappen: tests -> export + controles -> publicatie + sync. Zie docs/beheer.md.
 on:
-  workflow_dispatch:  # Handmatige trigger
-  schedule:           # Periodieke trigger
-    - cron: "0 3 * * *"  # Elke dag om 03:00 UTC
+  schedule:
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      datasets:
+        description: "Datasets: 'all' of een kommagescheiden lijst (bijv. cht,homosaurus)."
+        required: true
+        type: string
+        default: 'all'
+      publish:
+        description: 'Publiceer naar de LDV. Uit = alleen exporteren en controleren.'
+        required: true
+        type: boolean
+        default: true
+      allow_shrink:
+        description: 'Sta eenmalig toe dat een graph meer dan max_shrink_percent krimpt (alleen bewust gebruiken).'
+        required: true
+        type: boolean
+        default: false
+
+env:
+  CACHE_PATH: 'data'
+  DATASETS: ${{ inputs.datasets || 'all' }}
+
+# nooit twee runs tegelijk: de tweede zou halverwege de graphs van de eerste overschrijven
+concurrency:
+  group: thesauri-poolparty-etl
+  cancel-in-progress: false
+
+permissions:
+  contents: read
 
 jobs:
-  deploy:
-    runs-on: windows-latest
-
+  # GitHub schakelt geplande workflows in een openbare repository uit na 60 dagen zonder repository-activiteit
+  # (commits). Deze job zet de workflow bij elke run via de API opnieuw aan; dat telt als activiteit, zonder
+  # nepcommits. Los van de rest: als deze job faalt, gaan export en publicatie gewoon door.
+  keepalive:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      actions: write
     steps:
-      # 1. Haal de code op uit de repository
-      - name: Checkout repository
-        uses: actions/checkout@v3
+      - name: Houd de planning actief
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/deploy.yml/enable"
 
-      # 2. Installeer Python
-      - name: Set up Python
-        uses: actions/setup-python@v4
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
         with:
-          python-version: "3.11"
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Tests
+        run: python -m pytest
 
-      # 3. Installeer vereiste Python-pakketten
-      - name: Install dependencies
+  export:
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - name: Exporteer uit PoolParty en controleer
+        env:
+          POOLPARTY_AUTH: ${{ secrets.POOLPARTY_AUTH }}
+          TRIPLYDB_TOKEN: ${{ secrets.TRIPLYDB_TOKEN }}
+          ALLOW_SHRINK: ${{ inputs.allow_shrink && '--allow-shrink' || '' }}
+        run: python src/export_service.py --datasets "${DATASETS}" ${ALLOW_SHRINK}
+      # ook als een dataset is afgekeurd: de goedgekeurde datasets gaan door naar de publicatie
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: thesauri-export
+          path: |
+            ${{ env.CACHE_PATH }}/*.nq.gz
+            ${{ env.CACHE_PATH }}/manifest.json
+            ${{ env.CACHE_PATH }}/export.log
+          retention-days: 7
+          if-no-files-found: error
+
+  # Draait ook als de export-job rood is: publish_service.py publiceert alleen datasets die in het manifest
+  # als 'ok' staan. Zo houdt één kapot project de andere thesauri niet tegen. Zonder manifest faalt deze job.
+  publish:
+    needs: [test, export]
+    if: ${{ !cancelled() && needs.test.result == 'success' && needs.export.result != 'skipped' && (github.event_name == 'schedule' || inputs.publish) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-python@v7
+        with:
+          python-version: '3.12'
+          cache: pip
+      - run: pip install -r requirements.txt
+      - uses: actions/download-artifact@v8
+        with:
+          name: thesauri-export
+          path: ${{ env.CACHE_PATH }}
+      - name: TriplyDB CLI ophalen
         run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      # 4. Download TriplyDB CLI
-      - name: Download TriplyDB CLI
-        run: |
-          Invoke-WebRequest -Uri https://static.triply.cc/cli/triplydb.exe -OutFile triplydb.exe
-
-      # 5. Voeg TriplyDB CLI toe aan PATH
-      - name: Add TriplyDB CLI to PATH
-        run: |
-          echo "$(pwd)" >> $env:GITHUB_PATH
-
-      # 6. Stel omgevingsvariabelen in vanuit GitHub Secrets
-      - name: Set environment variables
+          wget -q 'https://static.triply.cc/cli/triplydb-linux'
+          chmod +x triplydb-linux
+      - name: Publiceer en synchroniseer
         env:
           TRIPLYDB_TOKEN: ${{ secrets.TRIPLYDB_TOKEN }}
-          POOLPARTY_AUTH: ${{ secrets.POOLPARTY_AUTH }}
-        run: |
-          echo "Secrets zijn ingesteld als omgevingsvariabelen."
-
-      # 7. Voer het Python-script uit
-      - name: Run thesauri-poolparty.py
-        env:
-          TRIPLYDB_TOKEN: ${{ secrets.TRIPLYDB_TOKEN }}
-          POOLPARTY_AUTH: ${{ secrets.POOLPARTY_AUTH }}
-        run: |
-          python thesauri-poolparty.py
+          TRIPLYDB_CLI: './triplydb-linux'
+        run: python src/publish_service.py --datasets "${DATASETS}"
+      - uses: actions/upload-artifact@v7
+        if: ${{ !cancelled() }}
+        with:
+          name: thesauri-publish-log
+          path: ${{ env.CACHE_PATH }}/publish.log
+          retention-days: 30
+          if-no-files-found: ignore
