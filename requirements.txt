@@ -1,4 +1,4 @@
 requests>=2.34.2,<3
 PyYAML==6.0.3
-rdflib>=7.1.0
+rdflib>=7.6.0
 pytest>=8.0
