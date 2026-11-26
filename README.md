@@ -74,7 +74,7 @@ Meer in [docs/beheer.md](docs/beheer.md).
 
 ## GitHub Action
 
-[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) draait elke dag om **03:00 UTC** en is handmatig te starten met:
+[`.github/workflows/deploy.yml`](.github/workflows/deploy.yml) draait elke dag om **23:00 Nederlandse tijd** en is handmatig te starten met:
 
 | Invoer | Betekenis |
 |---|---|
@@ -82,7 +82,7 @@ Meer in [docs/beheer.md](docs/beheer.md).
 | `publish` | uit = alleen exporteren en controleren |
 | `allow_shrink` | sta eenmalig een krimp van meer dan 10% toe |
 
-Jobs: `test` → `export` → `publish`, plus `keepalive`, die de planning actief houdt (zie [docs/beheer.md](docs/beheer.md#planning-actief-houden)). Twee runs lopen nooit tegelijk. De samenvatting van elke run toont per graph het aantal
+Jobs: `tijdstip` → `test` → `export` → `publish`, plus `keepalive`, die de planning actief houdt (zie [docs/beheer.md](docs/beheer.md#planning-actief-houden)). Twee runs lopen nooit tegelijk. De samenvatting van elke run toont per graph het aantal
 statements, het verschil met de LDV en de status van de services.
 
 Secrets: `POOLPARTY_AUTH` en `TRIPLYDB_TOKEN`.

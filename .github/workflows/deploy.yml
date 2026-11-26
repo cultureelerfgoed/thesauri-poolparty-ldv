@@ -1,10 +1,13 @@
 name: 'Deploy Thesauri PoolParty'
 
-# Elke dag 03:00 UTC (= 04:00/05:00 Nederlandse tijd). Handmatig starten kan ook.
+# Elke dag 23:00 Nederlandse tijd. Handmatig starten kan ook.
 # Stappen: tests -> export + controles -> publicatie + sync. Zie docs/beheer.md.
 on:
   schedule:
-    - cron: '0 3 * * *'
+    # GitHub rekent in UTC. 23:00 Nederlandse tijd is 21:00 UTC in de zomer en 22:00 UTC in de winter;
+    # beide staan erin en de job 'tijdstip' laat alleen de run door die nu 23:00 Nederlandse tijd is.
+    - cron: '0 21 * * *'
+    - cron: '0 22 * * *'
   workflow_dispatch:
     inputs:
       datasets:
@@ -50,7 +53,35 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: gh api -X PUT "repos/${{ github.repository }}/actions/workflows/deploy.yml/enable"
 
+  # Bij een geplande run: ga alleen door als de cron die hem startte nu 23:00 Nederlandse tijd is.
+  # Gekeken wordt naar de cron, niet naar de klok: GitHub start geplande runs soms ruim te laat.
+  tijdstip:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      door: ${{ steps.check.outputs.door }}
+    steps:
+      - id: check
+        env:
+          CRON: ${{ github.event.schedule }}
+        run: |
+          if [ -z "${CRON}" ]; then
+            echo "Handmatig gestart."
+            echo "door=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # +0200 = zomertijd, +0100 = wintertijd
+          if [ "$(TZ=Europe/Amsterdam date +%z)" = "+0200" ]; then juist='0 21 * * *'; else juist='0 22 * * *'; fi
+          if [ "${CRON}" = "${juist}" ]; then
+            echo "door=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "Cron '${CRON}' is nu geen 23:00 Nederlandse tijd; deze run doet niets."
+            echo "door=false" >> "$GITHUB_OUTPUT"
+          fi
+
   test:
+    needs: tijdstip
+    if: ${{ needs.tijdstip.outputs.door == 'true' }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:

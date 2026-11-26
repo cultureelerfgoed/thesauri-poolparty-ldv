@@ -11,7 +11,7 @@ Twee repositorysecrets (Settings → Secrets and variables → Actions). Ze best
 
 ## Een run starten
 
-Actions → *Deploy Thesauri PoolParty* → *Run workflow*. De planning draait elke dag om 03:00 UTC en **publiceert direct**.
+Actions → *Deploy Thesauri PoolParty* → *Run workflow*. De planning draait elke dag om 23:00 Nederlandse tijd en **publiceert direct**. GitHub kent alleen UTC; daarom staan 21:00 en 22:00 UTC in de cron en laat de job `tijdstip` alleen de run door die 23:00 Nederlandse tijd is. De andere run stopt direct.
 
 Na een wijziging in de code of de configuratie:
 
